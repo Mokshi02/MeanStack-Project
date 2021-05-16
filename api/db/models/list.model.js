@@ -7,6 +7,8 @@ const ListSchema = new mongoose.Schema({
         minlength: 1,
         trim: true
     }
+}, {
+    timestamps: true
 })
 
 const List = mongoose.model('List', ListSchema);

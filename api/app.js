@@ -1,14 +1,35 @@
 const express = require('express');
-const app = express();
-const { mongoose } = require('./db/mongoose');
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 //Load in the mongoose models
 const { List, Task } = require('./db/models');
-app.use(bodyParser.json());
 
-app.use(function(req, res, next) {
+const app = express()
+    .use(cors())
+    .use(express.json())
+    .use(express.urlencoded({ extended: true }));
+
+mongoose.connect(
+    'mongodb://localhost:27017/TasManager', 
+    { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false },
+    (error, response) => {
+        if(response) {
+            console.log("Connected to MongDB successfully");
+        }
+
+        if(error) {
+            console.log("Error while attempting to connect to MongoDB");
+            console.log(error);
+        }
+        // console.log(">>> error: ", error);
+        // console.log(">>> response: ", response);
+    }
+)
+app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
+    res.header("Access-Control-Allow-Methods", "GET, POST, HEAD, OPTIONS, PUT, PATCH, DELETE");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -74,7 +95,7 @@ app.delete('/lists/:id', (req, res) => {
  * GET /lists/:listId/tasks
  * Purpose: Get all tasks in a specific list
  */
- app.get('/lists/:listId/tasks', (req, res) => {
+app.get('/lists/:listId/tasks', (req, res) => {
     // We want to return all tasks that belong to a specific list (specified by listId)
     Task.find({
         _listId: req.params.listId
@@ -87,7 +108,7 @@ app.delete('/lists/:id', (req, res) => {
  * POST /lists/:listId/tasks
  * Purpose: Create a new task in a specific list
  */
- app.post('/lists/:listId/tasks', (req, res) => {
+app.post('/lists/:listId/tasks', (req, res) => {
     // We want to create a new task in a list specified by listId
     let newTask = new Task({
         title: req.body.title,
@@ -96,22 +117,22 @@ app.delete('/lists/:id', (req, res) => {
     newTask.save().then((newTaskDoc) => {
         res.send(newTaskDoc);
     })
- })
+})
 
- /**
- * PATCH /lists/:listId/tasks/:taskId
- * Purpose: Update an existing task
- */
+/**
+* PATCH /lists/:listId/tasks/:taskId
+* Purpose: Update an existing task
+*/
 app.patch('/lists/:listId/tasks/:taskId', (req, res) => {
     // We want to update an existing task (specified by taskId)
     Task.findOneAndUpdate({
         _id: req.params.taskId,
         _listId: req.params.listId
     }, {
-          $set: req.body
-        }
+        $set: req.body
+    }
     ).then(() => {
-        res.sendStatus(200);
+        res.send({message: 'Updated Successfully'});
     })
 });
 
@@ -119,14 +140,14 @@ app.patch('/lists/:listId/tasks/:taskId', (req, res) => {
  * DELETE /lists/:listId/tasks/:taskId
  * Purpose: Delete a task
  */
- app.delete('/lists/:listId/tasks/:taskId', (req, res) => {
+app.delete('/lists/:listId/tasks/:taskId', (req, res) => {
     Task.findOneAndRemove({
         _id: req.params.taskId,
         _listId: req.params.listId
     }).then((removedTaskDoc) => {
-            res.send(removedTaskDoc);
+        res.send(removedTaskDoc);
     })
 });
 app.listen(3000, () => {
     console.log("Server is listening on port 3000");
-}) 
+})
