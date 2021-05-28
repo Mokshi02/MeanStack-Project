@@ -12,7 +12,7 @@ export class LoginPageComponent implements OnInit {
 
   constructor(private authService: AuthService, private router: Router) { }
 
-  ngOnInit(): void {
+  ngOnInit() {
   }
   onLoginButtonClicked(email: string, password: string) {
     this.authService.login(email, password).subscribe((res: HttpResponse<any>) => {
